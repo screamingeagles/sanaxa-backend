@@ -19,19 +19,23 @@ const userSchema = new Schema({
 		required: true,
 		minlength: 6,
 	},
-	// cart: {
-	// 	restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", required: true },
-	// 	items: [
-	// 		{
-	// 			productId: {
-	// 				type: Schema.Types.ObjectId,
-	// 				ref: "Product",
-	// 				required: true,
-	// 			},
-	// 			quantity: { type: Number, required: true },
-	// 		},
-	// 	],
-	// },
+	cart: {
+		items: [
+			{
+				restaurantId: {
+					type: Schema.Types.ObjectId,
+					ref: "Restaurant",
+					required: true,
+				},
+				productId: {
+					type: Schema.Types.ObjectId,
+					ref: "Product",
+					required: true,
+				},
+				quantity: { type: Number, required: true },
+			},
+		],
+	},
 	resetToken: String,
 	resetTokenExpirationTime: Date,
 });

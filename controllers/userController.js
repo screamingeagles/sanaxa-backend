@@ -179,6 +179,7 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 	const foodItemsListDetailsPage = await FoodCategory.find({
 		restaurant: restaurantId,
 	})
+		.populate("restaurant")
 		.populate("foodItems")
 		.exec((err, dish) => {
 			// dish.map((i) => {
@@ -188,6 +189,7 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 			// 	});
 			// });
 			// res.send({ details, categories });c
+			// res.send({ dish: { ...dish, restaurant: dish.restaurant.name } });
 			res.send({ dish });
 		});
 	// console.log(details);
