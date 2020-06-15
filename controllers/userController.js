@@ -86,8 +86,8 @@ exports.login = async (req, res, next) => {
 			}
 		});
 	}
-	const { email, password } = req.body;
-	console.log(email, password);
+	const { email, password, basket } = req.body;
+	console.log(email, basket);
 	let existingUser;
 
 	try {
@@ -113,6 +113,8 @@ exports.login = async (req, res, next) => {
 		const err = new HttpError("Invalid credentials", 401);
 		return next(err);
 	}
+
+	// const cart = ( )
 
 	let token;
 	try {
