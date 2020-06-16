@@ -5,8 +5,20 @@ const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-	name: {
+	fname: {
 		type: String,
+		required: true,
+	},
+	lname: {
+		type: String,
+		required: true,
+	},
+	gender: {
+		type: String,
+		required: true,
+	},
+	date: {
+		type: Date,
 		required: true,
 	},
 	email: {
@@ -18,6 +30,12 @@ const userSchema = new Schema({
 		type: String,
 		required: true,
 		minlength: 6,
+	},
+	newsletter: {
+		type: Boolean,
+		},
+	SMS: {
+		type: Boolean,
 	},
 	cart: {
 		items: [

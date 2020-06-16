@@ -38,8 +38,17 @@ exports.signup = async (req, res, next) => {
 			}
 		});
 	}
-	const { email, name, password } = req.body;
-	console.log(email, name, password);
+	const {
+		email,
+		fname,
+		lname,
+		gender,
+		date,
+		password,
+		newsletter,
+		SMS,
+	} = req.body;
+	console.log(email, fname, lname, gender, date, password, newsletter, SMS);
 	let existingUser;
 
 	try {
@@ -60,9 +69,13 @@ exports.signup = async (req, res, next) => {
 	}
 	const createdUser = new User({
 		email,
-		name,
 		password: hashedPassword,
-		// orders: [[], []],
+		fname,
+		lname,
+		gender,
+		date,
+		newsletter,
+		SMS,
 	});
 	try {
 		await createdUser.save();
