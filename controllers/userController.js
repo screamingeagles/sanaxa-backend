@@ -160,28 +160,6 @@ exports.getUser = async (req, res, next) => {
 	res.json({ user: user });
 };
 
-// exports.addtocart = async (req, res, next) => {
-// 	const { restaurantName, id, uid } = req.body;
-// 	console.log(req.body);
-// 	const user = await User.findById({ _id: uid });
-// 	const cart = {
-// 		restaurantName: restaurantName,
-// 		id: id,
-// 	};
-// 	user.cart.push(cart);
-// 	await user.save();
-// 	console.log(user);
-// 	res.json({ message: "Done" });
-// };
-
-// exports.fetchCart = async (req, res, next) => {
-// 	const { restaurantName, id, uid } = req.body;
-// 	console.log(req.body);
-// 	const user = await User.findById({ _id: uid });
-// 	console.log(user);
-// 	res.json({ user: user.cart });
-// };
-
 exports.fetchAllRestaurants = async (req, res, next) => {
 	const allRestaurants = await Restaurant.find();
 	res.send({ allRestaurants });
@@ -210,3 +188,101 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 	// console.log(details);
 	// console.log(foodItemsListDetailsPage);
 };
+
+exports.addtobasket = async (req, res, next) => {
+	const {
+		restaurantId,
+		RestaurantName,
+		quantity,
+		productId,
+		name,
+		price,
+		totalPrice,
+		userId,
+	} = req.body;
+	console.log(
+		restaurantId,
+		RestaurantName,
+		quantity,
+		productId,
+		name,
+		price,
+		totalPrice,
+		userId
+	);
+	const user = await User.findById({ _id: userId });
+
+	const existingProduct = user.cart.items.find(
+		(i) => i.productId.toString() === productId.toString()
+	);
+	const existingProductIndex = user.cart.items.findIndex(
+		(i) => i.productId.toString() === productId.toString()
+	);
+
+	if (existingProduct) {
+		const tempProduct = existingProduct;
+		tempProduct.quantity += quantity;
+		user.cart.items[existingProductIndex] = tempProduct;
+		await user.save();
+		return;
+		// tempProduct.to
+	}
+
+	user.cart.RestaurantName = RestaurantName;
+	user.cart.restaurantId = restaurantId;
+
+	const cartData = {
+		quantity,
+		productId,
+		name,
+		price,
+		totalPrice,
+	};
+
+	user.cart.items.push(cartData);
+
+	await user.save();
+
+	// const cart = {
+	// 	restaurantName: restaurantName,
+	// 	id: id,
+	// };
+	// user.cart.push(cart);
+	// await user.save();
+	// console.log(user);
+	res.json({ message: "Done" });
+};
+
+exports.fetchCart = async (req, res, next) => {
+	const { userId } = req.body;
+	const user = await User.findById({ _id: userId });
+	console.log(user);
+	res.json({ user: user.cart });
+};
+
+exports.oldBasket = async (req, res, next) => {
+	//// FILTER DATA PLEASE ------------------------------------------
+
+	const { userId, cart } = req.body;
+	console.log(userId, cart);
+	const user = await User.findById({ _id: userId });
+	user.cart = cart;
+	await user.save();
+	res.json({ message: "Done", user: user.cart });
+};
+
+exports.clearBasket = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId } = req.body;
+	console.log(userId);
+	const user = await User.findById({ _id: userId });
+	const tempItems = [];
+	user.cart = {
+		items: [],
+	};
+	user.cart.items = tempItems;
+	await user.save();
+	res.json({ message: "Done" });
+};
+
+
