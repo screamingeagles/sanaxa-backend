@@ -5,8 +5,20 @@ const uniqueValidator = require("mongoose-unique-validator");
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
-	name: {
+	fname: {
 		type: String,
+		required: true,
+	},
+	lname: {
+		type: String,
+		required: true,
+	},
+	gender: {
+		type: String,
+		required: true,
+	},
+	date: {
+		type: Date,
 		required: true,
 	},
 	email: {
@@ -19,19 +31,29 @@ const userSchema = new Schema({
 		required: true,
 		minlength: 6,
 	},
-	// cart: {
-	// 	restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", required: true },
-	// 	items: [
-	// 		{
-	// 			productId: {
-	// 				type: Schema.Types.ObjectId,
-	// 				ref: "Product",
-	// 				required: true,
-	// 			},
-	// 			quantity: { type: Number, required: true },
-	// 		},
-	// 	],
-	// },
+	newsletter: {
+		type: Boolean,
+		},
+	SMS: {
+		type: Boolean,
+	},
+	cart: {
+		items: [
+			{
+				restaurantId: {
+					type: Schema.Types.ObjectId,
+					ref: "Restaurant",
+					required: true,
+				},
+				productId: {
+					type: Schema.Types.ObjectId,
+					ref: "Product",
+					required: true,
+				},
+				quantity: { type: Number, required: true },
+			},
+		],
+	},
 	resetToken: String,
 	resetTokenExpirationTime: Date,
 });

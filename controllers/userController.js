@@ -38,8 +38,17 @@ exports.signup = async (req, res, next) => {
 			}
 		});
 	}
-	const { email, name, password } = req.body;
-	console.log(email, name, password);
+	const {
+		email,
+		fname,
+		lname,
+		gender,
+		date,
+		password,
+		newsletter,
+		SMS,
+	} = req.body;
+	console.log(email, fname, lname, gender, date, password, newsletter, SMS);
 	let existingUser;
 
 	try {
@@ -60,9 +69,13 @@ exports.signup = async (req, res, next) => {
 	}
 	const createdUser = new User({
 		email,
-		name,
 		password: hashedPassword,
-		// orders: [[], []],
+		fname,
+		lname,
+		gender,
+		date,
+		newsletter,
+		SMS,
 	});
 	try {
 		await createdUser.save();
@@ -86,8 +99,8 @@ exports.login = async (req, res, next) => {
 			}
 		});
 	}
-	const { email, password } = req.body;
-	console.log(email, password);
+	const { email, password, basket } = req.body;
+	console.log(email, basket);
 	let existingUser;
 
 	try {
@@ -113,6 +126,8 @@ exports.login = async (req, res, next) => {
 		const err = new HttpError("Invalid credentials", 401);
 		return next(err);
 	}
+
+	// const cart = ( )
 
 	let token;
 	try {
@@ -179,6 +194,7 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 	const foodItemsListDetailsPage = await FoodCategory.find({
 		restaurant: restaurantId,
 	})
+		.populate("restaurant")
 		.populate("foodItems")
 		.exec((err, dish) => {
 			// dish.map((i) => {
@@ -188,6 +204,7 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 			// 	});
 			// });
 			// res.send({ details, categories });c
+			// res.send({ dish: { ...dish, restaurant: dish.restaurant.name } });
 			res.send({ dish });
 		});
 	// console.log(details);
