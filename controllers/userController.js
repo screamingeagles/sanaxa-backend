@@ -1,6 +1,9 @@
 const User = require("../models/user");
 const Restaurant = require("../models/restaurant");
 const FoodCategory = require("../models/foodcategory");
+const Order = require("../models/order");
+
+const io = require("../socket");
 
 const HttpError = require("../models/http-error").HttpError;
 
@@ -156,7 +159,6 @@ exports.getUser = async (req, res, next) => {
 		const err = new HttpError("Something went wrong", 500);
 		return next(err);
 	}
-	console.log(user);
 	res.json({ user: user });
 };
 
@@ -200,16 +202,7 @@ exports.addtobasket = async (req, res, next) => {
 		totalPrice,
 		userId,
 	} = req.body;
-	console.log(
-		restaurantId,
-		RestaurantName,
-		quantity,
-		productId,
-		name,
-		price,
-		totalPrice,
-		userId
-	);
+
 	const user = await User.findById({ _id: userId });
 
 	const existingProduct = user.cart.items.find(
@@ -223,11 +216,16 @@ exports.addtobasket = async (req, res, next) => {
 		const tempProduct = existingProduct;
 		tempProduct.quantity += quantity;
 		user.cart.items[existingProductIndex] = tempProduct;
-		await user.save();
+		const tempUser = await user.save();
+		io.getIO().emit("add", {
+			action: "add",
+			user: tempUser.cart,
+			userId,
+			userId,
+		});
+		res.status(200).json({ message: "ADD TO CART" });
 		return;
-		// tempProduct.to
 	}
-
 	user.cart.RestaurantName = RestaurantName;
 	user.cart.restaurantId = restaurantId;
 
@@ -240,49 +238,114 @@ exports.addtobasket = async (req, res, next) => {
 	};
 
 	user.cart.items.push(cartData);
-
-	await user.save();
-
-	// const cart = {
-	// 	restaurantName: restaurantName,
-	// 	id: id,
-	// };
-	// user.cart.push(cart);
-	// await user.save();
-	// console.log(user);
-	res.json({ message: "Done" });
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART" });
 };
 
 exports.fetchCart = async (req, res, next) => {
 	const { userId } = req.body;
 	const user = await User.findById({ _id: userId });
-	console.log(user);
-	res.json({ user: user.cart });
+	io.getIO().emit("add", { action: "add", user: user.cart, userId });
+	res.status(200).json({ user: user.cart });
+	// res.json({ user: user.cart });
 };
 
 exports.oldBasket = async (req, res, next) => {
-	//// FILTER DATA PLEASE ------------------------------------------
-
-	const { userId, cart } = req.body;
-	console.log(userId, cart);
+	// FILTER DATA PLEASE ------------------------------------------
+	const { userId, tempCart } = req.body;
 	const user = await User.findById({ _id: userId });
-	user.cart = cart;
-	await user.save();
-	res.json({ message: "Done", user: user.cart });
+	user.cart = tempCart;
+	const tempUser = await user.save();
+	// io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART", user: tempUser.cart });
 };
 
 exports.clearBasket = async (req, res, next) => {
 	//// FILTER DATA PLESE ------------------------------------------
 	const { userId } = req.body;
-	console.log(userId);
 	const user = await User.findById({ _id: userId });
 	const tempItems = [];
 	user.cart = {
 		items: [],
 	};
 	user.cart.items = tempItems;
-	await user.save();
-	res.json({ message: "Done" });
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART" });
 };
 
+exports.removeProduct = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId, productId } = req.body;
+	const user = await User.findById({ _id: userId });
 
+	const tempItems = user.cart.items.filter(
+		(i) => i.productId.toString() !== productId
+	);
+	if (tempItems.length < 1) user.cart = { items: [] };
+	user.cart.items = tempItems;
+
+	const tempUser = await user.save();
+	io.getIO().emit("add", {
+		action: "add",
+		user: tempUser.cart,
+		userId,
+		remove: false,
+	});
+	res.status(200).json({ message: "ADD TO CART" });
+};
+
+exports.addQuantity = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId, productId, quantity } = req.body;
+	const user = await User.findById({ _id: userId });
+
+	const existedItem = user.cart.items.find(
+		(i) => i.productId.toString() === productId
+	);
+	const existedItemIndex = user.cart.items.findIndex(
+		(i) => i.productId.toString() === productId
+	);
+	// if (tempItems.length < 1) user.cart = { items: [] };
+	if (existedItem) {
+		existedItem.quantity += quantity;
+		user.cart.items[existedItemIndex] = existedItem;
+	}
+	// user.cart.items = tempItems;
+
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART" });
+};
+
+exports.checkout = async (req, res, next) => {
+	const { userId } = req.body;
+	const user = await User.findById({ _id: userId });
+	const { RestaurantName, restaurantId, items } = user.cart;
+	const order = new Order({
+		orderStatus: "Active",
+		userId,
+		RestaurantName,
+		restaurantId,
+		items,
+	});
+	await order.save();
+	const tempItems = [];
+	user.cart = {
+		items: [],
+	};
+	user.cart.items = tempItems;
+	const tempUser = await user.save();
+	console.log(tempUser);
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "Success" });
+	// res.json({ message: "Success" });
+};
+
+exports.fetchOrderByUser = async (req, res, next) => {
+	const { userId } = req.body;
+	const order = await Order.find({ userId });
+
+	res.status(200).json({ message: "SUCCESS", order });
+};

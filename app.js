@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 
 const HttpError = require("./models/http-error").HttpError;
 
+const User = require("./models/user");
+
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
@@ -79,6 +81,13 @@ app.use((req, res, next) => {
 	next();
 });
 
+let clients;
+
+app.use(async (req, res, next) => {
+	req.clients = clients;
+	next();
+});
+
 app.use(userRoutes);
 
 // app.use((req, res, next) => {
@@ -101,13 +110,24 @@ app.use((error, req, res, next) => {
 	res.json({ message: error.message || "An unknown error occurred" });
 });
 
+const verifyToken = (token) => {};
+
 mongoose
 	.connect(
-		 //`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PWD}@cluster0-3qujd.mongodb.net/${process.env.DB_NAME}?retryWrites=true`
+		//`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PWD}@cluster0-3qujd.mongodb.net/${process.env.DB_NAME}?retryWrites=true`
 		`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PWD}@cluster0-n7ejg.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
 	)
-	.then(() => {
-		app.listen(process.env.PORT || 5000);
+	.then((result) => {
+		// app.listen(process.env.PORT || 5000);
+		const server = app.listen(process.env.PORT || 5000);
+		const io = require("./socket").init(server);
+		io.on("connection", (server) => {
+			console.log("Client Connected", server.id);
+			server.on("disconnect", () => {
+				console.log("User Disconnected");
+			});
+			clients = server.id;
+		});
 	})
 	.catch((err) => {
 		console.log(err);

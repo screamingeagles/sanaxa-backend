@@ -3,29 +3,36 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
-	restaurant: [
+	restaurantId: {
+		type: Schema.Types.ObjectId,
+		ref: "Restaurant",
+	},
+	RestaurantName: {
+		type: String,
+	},
+	items: [
 		{
-			type: Schema.Types.ObjectId,
-			ref: "Restaurant",
-			required: true,
-		},
-	],
-	products: [
-		{
-			product: { type: Object, required: true },
+			productId: {
+				type: Schema.Types.ObjectId,
+				ref: "Product",
+				required: true,
+			},
+			name: {
+				type: String,
+			},
+			price: {
+				type: String,
+			},
 			quantity: { type: Number, required: true },
 		},
 	],
-	user: {
-		email: {
-			type: String,
-			required: true,
-		},
-		userId: {
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: "User",
-		},
+	orderStatus: {
+		type: String,
+	},
+	userId: {
+		type: Schema.Types.ObjectId,
+		required: true,
+		ref: "User",
 	},
 });
 

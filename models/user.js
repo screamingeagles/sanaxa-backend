@@ -41,10 +41,9 @@ const userSchema = new Schema({
 		restaurantId: {
 			type: Schema.Types.ObjectId,
 			ref: "Restaurant",
-			required: true,
 		},
 		RestaurantName: {
-			type: String
+			type: String,
 		},
 		items: [
 			{
@@ -53,10 +52,10 @@ const userSchema = new Schema({
 					ref: "Product",
 					required: true,
 				},
-				name:{
+				name: {
 					type: String,
 				},
-				price:{
+				price: {
 					type: String,
 				},
 				quantity: { type: Number, required: true },

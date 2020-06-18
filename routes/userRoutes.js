@@ -38,8 +38,16 @@ router.post("/addtobasket", userContoller.addtobasket);
 
 router.post("/fetchbasket", userContoller.fetchCart);
 
-router.post('/oldbasket', userContoller.oldBasket)
+router.post("/oldbasket", userContoller.oldBasket);
 
-router.post('/clearbasket', userContoller.clearBasket)
+router.post("/clearbasket", userContoller.clearBasket);
+
+router.post("/removeproduct", userContoller.removeProduct);
+
+router.post("/addquantity", userContoller.addQuantity);
+
+router.post("/checkout", userContoller.checkout);
+
+router.post("/fetchorder", userContoller.fetchOrderByUser);
 
 module.exports = router;
