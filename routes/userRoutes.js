@@ -26,8 +26,6 @@ router.post(
 
 router.post("/userdetail", userContoller.getUser);
 
-// router.post("/:id/cart", userContoller.fetchCart);
-
 router.get("/allrestaurants", userContoller.fetchAllRestaurants);
 
 router.post("/restaurant", userContoller.fetchSingleRestaurant);

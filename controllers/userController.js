@@ -337,7 +337,7 @@ exports.checkout = async (req, res, next) => {
 	};
 	user.cart.items = tempItems;
 	const tempUser = await user.save();
-	console.log(tempUser);
+	console.log(tempUser);	
 	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
 	res.status(200).json({ message: "Success" });
 	// res.json({ message: "Success" });
