@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport(
 	sendGrid({
 		auth: {
 			api_key:
-				"SG.pRU3kAfCTg-2cEP5oA.49QuhaTZ0lalcc_LgjvPYdjNUkQlbca11rjwT3TXF58",
+"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",
 		},
 	})
 );
@@ -82,6 +82,15 @@ exports.signup = async (req, res, next) => {
 	});
 	try {
 		await createdUser.save();
+transporter.sendMail({
+				to: req.body.email,
+				from: "sma3797@outlook.com",
+				subject: "Password Reset",
+				html: `
+				<h1>Reset Password</h1>
+				<p>Click this to <a href='${process.env.FRONTEND_URL}/reset/${token}'>Reset Your Password</a></p>
+				`,
+			});
 	} catch (error) {
 		return next(new HttpError("Couldn't create user", 500));
 	}

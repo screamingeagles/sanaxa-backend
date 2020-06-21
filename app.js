@@ -38,11 +38,11 @@ app.use("/restaurant", restaurantRoutes);
 // 	next();
 // });
 
-// app.use((req, res, next) => {
-// 	console.log("Route couldn't found");
-// 	const error = new HttpError("Route couldn't found", 404);
-// 	throw error;
-// });
+app.use((req, res, next) => {
+	console.log("Route couldn't found");
+	const error = new HttpError("Route couldn't found", 404);
+	throw error;
+});
 
 // app.use((error, req, res, next) => {
 // 	if (res.headerSent) {

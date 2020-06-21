@@ -5,6 +5,7 @@ const { check, body } = require("express-validator");
 const restaurantController = require("../controllers/restauarantController");
 
 const checkAuth = require("../middleware/check-auth");
+const checkUser = require("../middleware/check-user");
 
 const HttpError = require("../models/http-error").HttpError;
 
@@ -25,7 +26,7 @@ router.post(
 );
 
 router.post(
-	"/signup",
+	"/register",
 	[
 		check("email").normalizeEmail().isEmail(),
 		check("password").trim().isLength({ min: 6 }),
@@ -39,7 +40,7 @@ router.post(
 		check("gender").not().isEmpty(),
 		check("dob").not().isEmpty(),
 	],
-	restaurantController.signup
+	restaurantController.register
 );
 
 router.post(
@@ -51,6 +52,25 @@ router.post(
 	restaurantController.login
 );
 
-// router.use(checkAuth);
+router.use(checkAuth);
+router.use(checkUser);
+
+router.post("/dashboard", restaurantController.dashboard); // ======== <>
+
+// router.post("/customer-management", restaurantController.login);
+// router.post("/restaurant-management", restaurantController.login);
+
+router.post("/order-management", restaurantController.orderManagement); // ======= <>
+
+// router.post("/order-details", restaurantController.login);
+// router.post("/update-vendor", restaurantController.login);
+// router.post("/kitchen-management-categories", restaurantController.login);
+
+router.post("/add-category", restaurantController.addCategory); // ======== <>
+
+router.post("/add-item", restaurantController.addItem); // ============ <>
+
+// router.post("/kitchen-menu", restaurantController.login);
+// router.post("/add-customer", restaurantController.login);
 
 module.exports = router;

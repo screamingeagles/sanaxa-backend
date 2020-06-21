@@ -13,6 +13,12 @@ const foodCategorySchema = new Schema({
 		required: true,
 	},
 	foodItems: [{ type: mongoose.Types.ObjectId, ref: "FoodItem" }],
+	priority: {
+		type: Number,
+	},
+	textArea: {
+		type: String,
+	},
 });
 
 module.exports = mongoose.model("FoodCategory", foodCategorySchema);

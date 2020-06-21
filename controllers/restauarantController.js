@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Restaurant = require("../models/restaurant");
 const FoodCategory = require("../models/foodcategory");
+const FoodItem = require("../models/fooditem");
 const Order = require("../models/order");
 const RestaurantAdmin = require("../models/restaurantAdmin");
 
@@ -109,7 +110,7 @@ exports.partner = async (req, res, next) => {
 	});
 };
 
-exports.signup = async (req, res, next) => {
+exports.register = async (req, res, next) => {
 	const {
 		email,
 		password,
@@ -119,11 +120,7 @@ exports.signup = async (req, res, next) => {
 		newsletter,
 		sms,
 	} = req.body;
-	if (password !== confirmpassword) {
-		const err = new HttpError("Password does not match!", 500);
-		return next(err);
-    }
-    
+
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
 		errors.errors.map((err) => {
@@ -134,12 +131,16 @@ exports.signup = async (req, res, next) => {
 				return next(new HttpError("Please enter a valid password", 422));
 			}
 			if (err.param === "gender") {
-				return next(new HttpError("Please select your gender", 422));
+				return next(new HttpError("Gender is required", 422));
 			}
 			if (err.param === "dob") {
 				return next(new HttpError("Date of Birth is Required", 422));
 			}
 		});
+	}
+	if (password !== confirmpassword) {
+		const err = new HttpError("Password does not match!", 500);
+		return next(err);
 	}
 
 	let existingRestaurant;
@@ -242,8 +243,8 @@ exports.login = async (req, res, next) => {
 	try {
 		token = jwt.sign(
 			{ userId: existingUser.id, email: existingUser.email },
-			"somekeygoodhai",
-			{ expiresIn: "1h" }
+			"somekeygoodhai"
+			// { expiresIn: "1h" }
 		);
 	} catch (error) {
 		return next(new HttpError("Couldn't login", 500));
@@ -254,4 +255,103 @@ exports.login = async (req, res, next) => {
 		email: existingUser.email,
 		token: token,
 	});
+};
+
+exports.dashboard = async (req, res, next) => {
+	const userId = req.userData.userId;
+	const existingRestaurants = await Restaurant.find({ restaurant: userId });
+
+	const Orders = await Order.find({
+		restaurantId: existingRestaurants[0]._id,
+	});
+	// .populate("userId");
+
+	let totalCustomers = [...new Set(Orders.map((i) => i.userId.toString()))];
+
+	const customers = await User.find(
+		{ _id: { $in: totalCustomers } },
+		(err, customer) => {
+			// console.log(customer);
+		}
+	);
+
+	let totalSales = 0;
+
+	Orders.map((i) =>
+		i.items.map((j) => {
+			totalSales += parseFloat(j.quantity) * parseFloat(j.price);
+		})
+	);
+
+	res.status(200).json({
+		customers,
+		// Orders,
+		totalSales,
+		totalOrders: Orders.length,
+		totalCustomers: totalCustomers.length,
+	});
+};
+
+exports.addCategory = async (req, res, next) => {
+	const { categoryName, textArea, priority } = req.body;
+	const userId = req.userData.userId;
+	const existingRestaurant = await Restaurant.find({ restaurant: userId });
+	const foodCategory = new FoodCategory({
+		restaurant: existingRestaurant[0]._id,
+		categoryName,
+		textArea,
+		priority,
+	});
+	const cat = await foodCategory.save();
+	res.status(200).json({ message: "OK", userId, existingRestaurant, cat });
+};
+
+exports.addItem = async (req, res, next) => {
+	const { foodCategory, name, description, price } = req.body;
+	const userId = req.userData.userId;
+	const foodItems = new FoodItem({
+		foodCategory,
+		foodList: { name, price, description },
+	});
+	let cat;
+	try {
+		const foodItemsListUpdated = await foodItems.save();
+		const foodCategoryItem = await FoodCategory.findById(foodCategory);
+		foodCategoryTempList = [
+			...foodCategoryItem.foodItems,
+			foodItemsListUpdated._id,
+		];
+		foodCategoryItem.foodItems = foodCategoryTempList;
+
+		cat = await foodCategoryItem.save();
+	} catch (err) {
+		const error = new HttpError("Error, please", 404);
+		throw error;
+	}
+	res.status(200).json({ message: "OK", userId, cat });
+};
+
+exports.orderManagement = async (req, res, next) => {
+	const { foodCategory, name, description, price } = req.body;
+	const userId = req.userData.userId;
+	const foodItems = new FoodItem({
+		foodCategory,
+		foodList: { name, price, description },
+	});
+	let cat;
+	try {
+		const foodItemsListUpdated = await foodItems.save();
+		const foodCategoryItem = await FoodCategory.findById(foodCategory);
+		foodCategoryTempList = [
+			...foodCategoryItem.foodItems,
+			foodItemsListUpdated._id,
+		];
+		foodCategoryItem.foodItems = foodCategoryTempList;
+
+		cat = await foodCategoryItem.save();
+	} catch (err) {
+		const error = new HttpError("Error, please", 404);
+		throw error;
+	}
+	res.status(200).json({ message: "OK", userId, cat });
 };
