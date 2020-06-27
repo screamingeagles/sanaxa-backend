@@ -19,6 +19,9 @@ const foodCategorySchema = new Schema({
 	textArea: {
 		type: String,
 	},
+	status: {
+		type: String,
+	},
 });
 
 module.exports = mongoose.model("FoodCategory", foodCategorySchema);

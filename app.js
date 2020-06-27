@@ -4,11 +4,6 @@ const mongoose = require("mongoose");
 
 const HttpError = require("./models/http-error").HttpError;
 
-const User = require("./models/user");
-const Restaurant = require("./models/restaurant");
-const FoodCategory = require("./models/foodcategory");
-const FoodItem = require("./models/fooditem");
-
 const userRoutes = require("./routes/userRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 

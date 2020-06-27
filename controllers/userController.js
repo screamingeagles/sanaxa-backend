@@ -85,7 +85,7 @@ exports.signup = async (req, res, next) => {
 		transporter.sendMail({
 			to: req.body.email,
 			from: "sma3797@outlook.com",
-			subject: "Password Reset",
+			subject: "Snaxa Signup",
 			html: `
 				<h1>Snaxa</h1>
 				<p>Thanks for signing up!</p>
@@ -211,8 +211,8 @@ exports.addtobasket = async (req, res, next) => {
 		totalPrice,
 		userId,
 	} = req.body;
-
-	const user = await User.findById({ _id: userId });
+	let user;
+	user = await User.findById({ _id: userId });
 
 	const existingProduct = user.cart.items.find(
 		(i) => i.productId.toString() === productId.toString()
@@ -254,7 +254,9 @@ exports.addtobasket = async (req, res, next) => {
 
 exports.fetchCart = async (req, res, next) => {
 	const { userId } = req.body;
-	const user = await User.findById({ _id: userId });
+	let user;
+	user = await User.findById({ _id: userId });
+	console.log(user);
 	io.getIO().emit("add", { action: "add", user: user.cart, userId });
 	res.status(200).json({ user: user.cart });
 	// res.json({ user: user.cart });
@@ -322,10 +324,9 @@ exports.addQuantity = async (req, res, next) => {
 		user.cart.items[existedItemIndex] = existedItem;
 	}
 	// user.cart.items = tempItems;
-
 	const tempUser = await user.save();
 	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
-	res.status(200).json({ message: "ADD TO CART" });
+	res.status(200).json({ message: "ADD TO CART", cart: tempUser.cart });
 };
 
 exports.checkout = async (req, res, next) => {
@@ -333,7 +334,7 @@ exports.checkout = async (req, res, next) => {
 	const user = await User.findById({ _id: userId });
 	const { RestaurantName, restaurantId, items } = user.cart;
 	const order = new Order({
-		orderStatus: "Active",
+		orderStatus: "Pending",
 		userId,
 		RestaurantName,
 		restaurantId,

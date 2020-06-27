@@ -8,6 +8,9 @@ const foodItemSchema = new Schema({
 		required: true,
 	},
 	foodList: { type: Object, required: true, ref: "FoodCategory" },
+	status: {
+		type: String,
+	},
 });
 
 module.exports = mongoose.model("FoodItem", foodItemSchema);

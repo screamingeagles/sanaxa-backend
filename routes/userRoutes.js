@@ -24,13 +24,14 @@ router.post(
 	userContoller.signup
 );
 
-router.post("/userdetail", userContoller.getUser);
 
 router.get("/allrestaurants", userContoller.fetchAllRestaurants);
 
 router.post("/restaurant", userContoller.fetchSingleRestaurant);
 
 router.use(checkAuth);
+
+router.post("/userdetail", userContoller.getUser);
 
 router.post("/addtobasket", userContoller.addtobasket);
 

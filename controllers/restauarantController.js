@@ -301,6 +301,7 @@ exports.addCategory = async (req, res, next) => {
 		categoryName,
 		textArea,
 		priority,
+		status: "Active",
 	});
 	const cat = await foodCategory.save();
 	res.status(200).json({ message: "OK", userId, existingRestaurant, cat });
@@ -312,6 +313,7 @@ exports.addItem = async (req, res, next) => {
 	const foodItems = new FoodItem({
 		foodCategory,
 		foodList: { name, price, description },
+		status: "Active",
 	});
 	let cat;
 	try {
@@ -332,26 +334,32 @@ exports.addItem = async (req, res, next) => {
 };
 
 exports.orderManagement = async (req, res, next) => {
-	const { foodCategory, name, description, price } = req.body;
 	const userId = req.userData.userId;
-	const foodItems = new FoodItem({
-		foodCategory,
-		foodList: { name, price, description },
-	});
-	let cat;
-	try {
-		const foodItemsListUpdated = await foodItems.save();
-		const foodCategoryItem = await FoodCategory.findById(foodCategory);
-		foodCategoryTempList = [
-			...foodCategoryItem.foodItems,
-			foodItemsListUpdated._id,
-		];
-		foodCategoryItem.foodItems = foodCategoryTempList;
+	const existingRestaurants = await Restaurant.find({ restaurant: userId });
 
-		cat = await foodCategoryItem.save();
-	} catch (err) {
-		const error = new HttpError("Error, please", 404);
-		throw error;
-	}
-	res.status(200).json({ message: "OK", userId, cat });
+	const Orders = await Order.find({
+		restaurantId: existingRestaurants[0]._id,
+		orderStatus: "Pending" || "Dispatched" || "Confirmed",
+	});
+	res.status(200).json({ message: "OK", Orders });
+};
+
+exports.orderDetails = async (req, res, next) => {
+	const { orderId } = req.body;
+	const order = await Order.findById({ _id: orderId });
+	res.status(200).json({ message: "OK", order });
+};
+
+exports.orderStatusUpdate = async (req, res, next) => {
+	const { orderId, orderStatus } = req.body;
+	const order = await Order.findById({ _id: orderId });
+	order.orderStatus = orderStatus;
+	let orderNew = await order.save();
+	res.status(200).json({ message: "OK", orderNew });
+};
+
+exports.kitchenManagementCategories = async (req, res, next) => {
+	const userId = req.userData.userId;
+	const existingRestaurants = await Restaurant.find({ restaurant: userId });
+	res.status(200).json({ message: "OK" });
 };

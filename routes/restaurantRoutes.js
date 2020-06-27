@@ -57,20 +57,24 @@ router.use(checkUser);
 
 router.post("/dashboard", restaurantController.dashboard); // ======== <>
 
-// router.post("/customer-management", restaurantController.login);
-// router.post("/restaurant-management", restaurantController.login);
-
 router.post("/order-management", restaurantController.orderManagement); // ======= <>
 
-// router.post("/order-details", restaurantController.login);
+router.post("/order-details", restaurantController.orderDetails); // ======= <>
+
+router.post("/order-details-status", restaurantController.orderStatusUpdate); // ======= <>
+
 // router.post("/update-vendor", restaurantController.login);
-// router.post("/kitchen-management-categories", restaurantController.login);
+
+router.post("/kitchen-management-categories", restaurantController.kitchenManagementCategories);
 
 router.post("/add-category", restaurantController.addCategory); // ======== <>
 
 router.post("/add-item", restaurantController.addItem); // ============ <>
 
 // router.post("/kitchen-menu", restaurantController.login);
-// router.post("/add-customer", restaurantController.login);
 
 module.exports = router;
+
+// router.post("/customer-management", restaurantController.login);
+// router.post("/restaurant-management", restaurantController.login);
+// router.post("/add-customer", restaurantController.login);
