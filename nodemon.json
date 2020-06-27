@@ -1,8 +1,0 @@
-{
-	"env": {
-		"DB_USER": "root",
-		"DB_PWD": "kvkiFOMGqvByvFLv",
-		"DB_NAME": "sanax",
-		"SEND_GRID_API": "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"
-	}
-}
