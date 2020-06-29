@@ -1,6 +1,9 @@
 const User = require("../models/user");
 const Restaurant = require("../models/restaurant");
 const FoodCategory = require("../models/foodcategory");
+const Order = require("../models/order");
+
+const io = require("../socket");
 
 const HttpError = require("../models/http-error").HttpError;
 
@@ -16,7 +19,7 @@ const transporter = nodemailer.createTransport(
 	sendGrid({
 		auth: {
 			api_key:
-				"SG.pRU3kAfCTg-2cEP5oA.49QuhaTZ0lalcc_LgjvPYdjNUkQlbca11rjwT3TXF58",
+				`${process.env.SEND_GRID_API}`,
 		},
 	})
 );
@@ -79,6 +82,15 @@ exports.signup = async (req, res, next) => {
 	});
 	try {
 		await createdUser.save();
+		transporter.sendMail({
+			to: req.body.email,
+			from: "sma3797@outlook.com",
+			subject: "Snaxa Signup",
+			html: `
+				<h1>Snaxa</h1>
+				<p>Thanks for signing up!</p>
+				`,
+		});
 	} catch (error) {
 		return next(new HttpError("Couldn't create user", 500));
 	}
@@ -156,31 +168,8 @@ exports.getUser = async (req, res, next) => {
 		const err = new HttpError("Something went wrong", 500);
 		return next(err);
 	}
-	console.log(user);
 	res.json({ user: user });
 };
-
-// exports.addtocart = async (req, res, next) => {
-// 	const { restaurantName, id, uid } = req.body;
-// 	console.log(req.body);
-// 	const user = await User.findById({ _id: uid });
-// 	const cart = {
-// 		restaurantName: restaurantName,
-// 		id: id,
-// 	};
-// 	user.cart.push(cart);
-// 	await user.save();
-// 	console.log(user);
-// 	res.json({ message: "Done" });
-// };
-
-// exports.fetchCart = async (req, res, next) => {
-// 	const { restaurantName, id, uid } = req.body;
-// 	console.log(req.body);
-// 	const user = await User.findById({ _id: uid });
-// 	console.log(user);
-// 	res.json({ user: user.cart });
-// };
 
 exports.fetchAllRestaurants = async (req, res, next) => {
 	const allRestaurants = await Restaurant.find();
@@ -209,4 +198,164 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 		});
 	// console.log(details);
 	// console.log(foodItemsListDetailsPage);
+};
+
+exports.addtobasket = async (req, res, next) => {
+	const {
+		restaurantId,
+		RestaurantName,
+		quantity,
+		productId,
+		name,
+		price,
+		totalPrice,
+		userId,
+	} = req.body;
+	let user;
+	user = await User.findById({ _id: userId });
+
+	const existingProduct = user.cart.items.find(
+		(i) => i.productId.toString() === productId.toString()
+	);
+	const existingProductIndex = user.cart.items.findIndex(
+		(i) => i.productId.toString() === productId.toString()
+	);
+
+	if (existingProduct) {
+		const tempProduct = existingProduct;
+		tempProduct.quantity += quantity;
+		user.cart.items[existingProductIndex] = tempProduct;
+		const tempUser = await user.save();
+		io.getIO().emit("add", {
+			action: "add",
+			user: tempUser.cart,
+			userId,
+			userId,
+		});
+		res.status(200).json({ message: "ADD TO CART" });
+		return;
+	}
+	user.cart.RestaurantName = RestaurantName;
+	user.cart.restaurantId = restaurantId;
+
+	const cartData = {
+		quantity,
+		productId,
+		name,
+		price,
+		totalPrice,
+	};
+
+	user.cart.items.push(cartData);
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART" });
+};
+
+exports.fetchCart = async (req, res, next) => {
+	const { userId } = req.body;
+	let user;
+	user = await User.findById({ _id: userId });
+	console.log(user);
+	io.getIO().emit("add", { action: "add", user: user.cart, userId });
+	res.status(200).json({ user: user.cart });
+	// res.json({ user: user.cart });
+};
+
+exports.oldBasket = async (req, res, next) => {
+	// FILTER DATA PLEASE ------------------------------------------
+	const { userId, tempCart } = req.body;
+	const user = await User.findById({ _id: userId });
+	user.cart = tempCart;
+	const tempUser = await user.save();
+	// io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART", user: tempUser.cart });
+};
+
+exports.clearBasket = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId } = req.body;
+	const user = await User.findById({ _id: userId });
+	const tempItems = [];
+	user.cart = {
+		items: [],
+	};
+	user.cart.items = tempItems;
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART" });
+};
+
+exports.removeProduct = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId, productId } = req.body;
+	const user = await User.findById({ _id: userId });
+
+	const tempItems = user.cart.items.filter(
+		(i) => i.productId.toString() !== productId
+	);
+	if (tempItems.length < 1) user.cart = { items: [] };
+	user.cart.items = tempItems;
+
+	const tempUser = await user.save();
+	io.getIO().emit("add", {
+		action: "add",
+		user: tempUser.cart,
+		userId,
+		remove: false,
+	});
+	res.status(200).json({ message: "ADD TO CART" });
+};
+
+exports.addQuantity = async (req, res, next) => {
+	//// FILTER DATA PLESE ------------------------------------------
+	const { userId, productId, quantity } = req.body;
+	const user = await User.findById({ _id: userId });
+
+	const existedItem = user.cart.items.find(
+		(i) => i.productId.toString() === productId
+	);
+	const existedItemIndex = user.cart.items.findIndex(
+		(i) => i.productId.toString() === productId
+	);
+	// if (tempItems.length < 1) user.cart = { items: [] };
+	if (existedItem) {
+		existedItem.quantity += quantity;
+		user.cart.items[existedItemIndex] = existedItem;
+	}
+	// user.cart.items = tempItems;
+	const tempUser = await user.save();
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "ADD TO CART", cart: tempUser.cart });
+};
+
+exports.checkout = async (req, res, next) => {
+	const { userId } = req.body;
+	const user = await User.findById({ _id: userId });
+	const { RestaurantName, restaurantId, items } = user.cart;
+	const order = new Order({
+		orderStatus: "Pending",
+		userId,
+		RestaurantName,
+		restaurantId,
+		items,
+	});
+	await order.save();
+	const tempItems = [];
+	user.cart = {
+		items: [],
+	};
+	user.cart.items = tempItems;
+	const tempUser = await user.save();
+	console.log(tempUser);
+	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+	res.status(200).json({ message: "Success" });
+	// res.json({ message: "Success" });
+};
+
+exports.fetchOrderByUser = async (req, res, next) => {
+	const { userId } = req.body;
+	const order = await Order.find({ userId });
+
+	res.status(200).json({ message: "SUCCESS", order });
 };

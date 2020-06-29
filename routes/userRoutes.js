@@ -3,6 +3,7 @@ const router = require("express").Router();
 const { check } = require("express-validator");
 
 const userContoller = require("../controllers/userController");
+const checkAuth = require("../middleware/check-auth");
 
 router.post(
 	"/login",
@@ -23,14 +24,29 @@ router.post(
 	userContoller.signup
 );
 
-router.post("/userdetail", userContoller.getUser);
-
-// router.post("/addtocart", userContoller.addtocart);
-
-// router.post("/:id/cart", userContoller.fetchCart);
 
 router.get("/allrestaurants", userContoller.fetchAllRestaurants);
 
 router.post("/restaurant", userContoller.fetchSingleRestaurant);
+
+router.use(checkAuth);
+
+router.post("/userdetail", userContoller.getUser);
+
+router.post("/addtobasket", userContoller.addtobasket);
+
+router.post("/fetchbasket", userContoller.fetchCart);
+
+router.post("/oldbasket", userContoller.oldBasket);
+
+router.post("/clearbasket", userContoller.clearBasket);
+
+router.post("/removeproduct", userContoller.removeProduct);
+
+router.post("/addquantity", userContoller.addQuantity);
+
+router.post("/checkout", userContoller.checkout);
+
+router.post("/fetchorder", userContoller.fetchOrderByUser);
 
 module.exports = router;

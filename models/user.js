@@ -33,22 +33,30 @@ const userSchema = new Schema({
 	},
 	newsletter: {
 		type: Boolean,
-		},
+	},
 	SMS: {
 		type: Boolean,
 	},
 	cart: {
+		restaurantId: {
+			type: Schema.Types.ObjectId,
+			ref: "Restaurant",
+		},
+		RestaurantName: {
+			type: String,
+		},
 		items: [
 			{
-				restaurantId: {
-					type: Schema.Types.ObjectId,
-					ref: "Restaurant",
-					required: true,
-				},
 				productId: {
 					type: Schema.Types.ObjectId,
 					ref: "Product",
 					required: true,
+				},
+				name: {
+					type: String,
+				},
+				price: {
+					type: String,
 				},
 				quantity: { type: Number, required: true },
 			},
