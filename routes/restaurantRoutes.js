@@ -71,6 +71,8 @@ router.post("/add-category", restaurantController.addCategory); // ======== <>
 
 router.post("/add-item", restaurantController.addItem); // ============ <>
 
+router.post("/add-addon", restaurantController.addAddOn); // ============ <>
+
 // router.post("/kitchen-menu", restaurantController.login);
 
 module.exports = router;

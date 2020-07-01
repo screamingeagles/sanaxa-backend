@@ -2,6 +2,7 @@ const User = require("../models/user");
 const Restaurant = require("../models/restaurant");
 const FoodCategory = require("../models/foodcategory");
 const Order = require("../models/order");
+const AddOn = require("../models/addon");
 
 const io = require("../socket");
 
@@ -18,8 +19,7 @@ const sendGrid = require("nodemailer-sendgrid-transport");
 const transporter = nodemailer.createTransport(
 	sendGrid({
 		auth: {
-			api_key:
-				`${process.env.SEND_GRID_API}`,
+			api_key: `${process.env.SEND_GRID_API}`,
 		},
 	})
 );
@@ -51,7 +51,7 @@ exports.signup = async (req, res, next) => {
 		newsletter,
 		SMS,
 	} = req.body;
-	console.log(email, fname, lname, gender, date, password, newsletter, SMS);
+	// console.log(email, fname, lname, gender, date, password, newsletter, SMS);
 	let existingUser;
 
 	try {
@@ -112,7 +112,7 @@ exports.login = async (req, res, next) => {
 		});
 	}
 	const { email, password, basket } = req.body;
-	console.log(email, basket);
+	// console.log(email, basket);
 	let existingUser;
 
 	try {
@@ -145,8 +145,8 @@ exports.login = async (req, res, next) => {
 	try {
 		token = jwt.sign(
 			{ userId: existingUser.id, email: existingUser.email },
-			"somekeygoodhai",
-			{ expiresIn: "1h" }
+			"somekeygoodhai"
+			// { expiresIn: "1h" }
 		);
 	} catch (error) {
 		return next(new HttpError("Couldn't login", 500));
@@ -180,24 +180,30 @@ exports.fetchSingleRestaurant = async (req, res, next) => {
 	const restaurantId = req.body.restaurantId;
 	let details = [];
 	let categories = [];
+	let newDish;
 	const foodItemsListDetailsPage = await FoodCategory.find({
 		restaurant: restaurantId,
 	})
 		.populate("restaurant")
 		.populate("foodItems")
 		.exec((err, dish) => {
-			// dish.map((i) => {
-			// 	categories.push([i.categoryName, i.restaurant.name]);
-			// 	return i.foodItems.map((p) => {
-			// 		details.push(p);
-			// 	});
-			// });
 			// res.send({ details, categories });c
 			// res.send({ dish: { ...dish, restaurant: dish.restaurant.name } });
-			res.send({ dish });
+			res.status(200).send({ dish, newDish });
 		});
 	// console.log(details);
 	// console.log(foodItemsListDetailsPage);
+};
+
+exports.fetchAddOns = async (req, res, next) => {
+	const { addOnList } = req.body;
+	const addOns = await AddOn.find(
+		{ _id: { $in: addOnList } },
+		(err, customer) => {
+			// console.log(customer);
+		}
+	);
+	res.status(200).json({ message: "OK", addOns });
 };
 
 exports.addtobasket = async (req, res, next) => {
@@ -256,7 +262,7 @@ exports.fetchCart = async (req, res, next) => {
 	const { userId } = req.body;
 	let user;
 	user = await User.findById({ _id: userId });
-	console.log(user);
+	// console.log(user);
 	io.getIO().emit("add", { action: "add", user: user.cart, userId });
 	res.status(200).json({ user: user.cart });
 	// res.json({ user: user.cart });
@@ -347,7 +353,7 @@ exports.checkout = async (req, res, next) => {
 	};
 	user.cart.items = tempItems;
 	const tempUser = await user.save();
-	console.log(tempUser);
+	// console.log(tempUser);
 	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
 	res.status(200).json({ message: "Success" });
 	// res.json({ message: "Success" });

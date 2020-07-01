@@ -34,7 +34,7 @@ app.use("/restaurant", restaurantRoutes);
 // });
 
 app.use((req, res, next) => {
-	console.log("Route couldn't found");
+	// console.log("Route couldn't found");
 	const error = new HttpError("Route couldn't found", 404);
 	throw error;
 });
@@ -62,9 +62,9 @@ mongoose
 		const server = app.listen(process.env.PORT || 5000);
 		const io = require("./socket").init(server);
 		io.on("connection", (server) => {
-			console.log("Client Connected", server.id);
+			// console.log("Client Connected", server.id);
 			server.on("disconnect", () => {
-				console.log("User Disconnected");
+				// console.log("User Disconnected");
 			});
 		});
 	})

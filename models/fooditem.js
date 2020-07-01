@@ -11,6 +11,7 @@ const foodItemSchema = new Schema({
 	status: {
 		type: String,
 	},
+	addOnList: [{ type: Schema.Types.ObjectId, ref: "AddOn" }],
 });
 
 module.exports = mongoose.model("FoodItem", foodItemSchema);

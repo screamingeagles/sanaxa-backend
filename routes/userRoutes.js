@@ -29,6 +29,8 @@ router.get("/allrestaurants", userContoller.fetchAllRestaurants);
 
 router.post("/restaurant", userContoller.fetchSingleRestaurant);
 
+router.post("/addons", userContoller.fetchAddOns);
+
 router.use(checkAuth);
 
 router.post("/userdetail", userContoller.getUser);

@@ -15,7 +15,7 @@ const orderSchema = new Schema(
 			{
 				productId: {
 					type: Schema.Types.ObjectId,
-					ref: "Product",
+					ref: "FoodItem",
 					required: true,
 				},
 				name: {

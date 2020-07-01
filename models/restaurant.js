@@ -20,7 +20,7 @@ const restaurantSchema = new Schema({
 	rating: {
 		type: Number,
 	},
-	tags: [],
+	cuisines: [],
 	deliveryTime: {
 		type: Number,
 	},
