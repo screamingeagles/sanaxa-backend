@@ -21,7 +21,12 @@ const addOnSchema = new Schema({
 	},
 	howMany: {
 		type: Number,
-		required: true,
+	},
+	howManyMaximum: {
+		type: Number,
+	},
+	selectAll: {
+		type: Boolean,
 	},
 	items: [
 		{

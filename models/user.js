@@ -59,26 +59,6 @@ const userSchema = new Schema({
 					type: String,
 				},
 				quantity: { type: Number, required: true },
-				// addOns: [
-				// 	{
-				// 		addOnId: {
-				// 			type: Schema.Types.ObjectId,
-				// 			ref: "AddOn",
-				// 			// required: true,
-				// 		},
-				// 		addOn: [
-				// 			{
-				// 				name: {
-				// 					type: String,
-				// 				},
-				// 				price: {
-				// 					type: String,
-				// 				},
-				// 				values: [],
-				// 			},
-				// 		],
-				// 	},
-				// ],
 			},
 		],
 	},

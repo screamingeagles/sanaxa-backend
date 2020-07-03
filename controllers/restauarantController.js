@@ -331,15 +331,16 @@ exports.addItem = async (req, res, next) => {
 		name,
 		description,
 		price,
-		fixedPrice,
+		priceOnSelection,
 		addOnList,
 	} = req.body;
 	const userId = req.userData.userId;
 	const foodItems = new FoodItem({
 		foodCategory,
-		foodList: { name, price, description, fixedPrice },
+		foodList: { name, price, description },
 		status: "Active",
 		addOnList,
+		priceOnSelection,
 	});
 	let cat;
 	try {
@@ -365,6 +366,8 @@ exports.addAddOn = async (req, res, next) => {
 		requiredStatus,
 		multiSelection,
 		howMany,
+		howManyMaximum,
+		selectAll,
 		items,
 	} = req.body;
 	const userId = req.userData.userId;
@@ -374,6 +377,8 @@ exports.addAddOn = async (req, res, next) => {
 		requiredStatus,
 		multiSelection,
 		howMany,
+		howManyMaximum,
+		selectAll,
 		items,
 	});
 	let addOns;
