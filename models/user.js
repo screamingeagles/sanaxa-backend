@@ -59,6 +59,8 @@ const userSchema = new Schema({
 					type: String,
 				},
 				quantity: { type: Number, required: true },
+				addOns: [],
+				addOnList: [],
 			},
 		],
 	},

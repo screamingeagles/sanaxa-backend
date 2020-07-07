@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Restaurant = require("../models/restaurant");
 const FoodCategory = require("../models/foodcategory");
+const FoodItem = require("../models/fooditem");
 const Order = require("../models/order");
 const AddOn = require("../models/addon");
 
@@ -207,7 +208,7 @@ exports.fetchAddOns = async (req, res, next) => {
 };
 
 exports.addtobasket = async (req, res, next) => {
-	const {
+	let {
 		restaurantId,
 		RestaurantName,
 		quantity,
@@ -216,42 +217,190 @@ exports.addtobasket = async (req, res, next) => {
 		price,
 		totalPrice,
 		userId,
+		tempAddOns,
+		addOnList,
 	} = req.body;
+
 	let user;
 	user = await User.findById({ _id: userId });
 
-	const existingProduct = user.cart.items.find(
-		(i) => i.productId.toString() === productId.toString()
-	);
-	const existingProductIndex = user.cart.items.findIndex(
-		(i) => i.productId.toString() === productId.toString()
-	);
+	const product = await FoodItem.findById({ _id: productId });
+	if (!product) {
+	}
+	totalPrice = product.foodList.price;
 
-	if (existingProduct) {
-		const tempProduct = existingProduct;
-		tempProduct.quantity += quantity;
-		user.cart.items[existingProductIndex] = tempProduct;
-		const tempUser = await user.save();
-		io.getIO().emit("add", {
-			action: "add",
-			user: tempUser.cart,
-			userId,
-			userId,
+	const addOns = [];
+	if (tempAddOns)
+		await Promise.all(
+			tempAddOns.map(async (i) => {
+				const addOn = await AddOn.findById({ _id: i.addOnId });
+				if (addOn && i.value._id) {
+					addOn.items.map((j) => {
+						if (j._id.toString() === i.value._id.toString()) {
+							addOns.push(j.name);
+							j.price ? (totalPrice += parseFloat(j.price)) : "";
+						}
+					});
+				}
+				if (addOn && i.value.length > 0) {
+					i.value.map((j) => {
+						// console.log("j", j);
+						addOn.items.map((k) => {
+							if (k._id.toString() === j._id.toString()) {
+								addOns.push(k.name);
+								k.price ? (totalPrice += parseFloat(k.price)) : "";
+							}
+						});
+					});
+				}
+			})
+		);
+
+	let existingProduct;
+	if (tempAddOns)
+		existingProduct = user.cart.items.filter(
+			(i) => i.productId.toString() === productId.toString()
+		);
+
+	if (!tempAddOns)
+		existingProduct = user.cart.items.find(
+			(i) => i.productId.toString() === productId.toString()
+		);
+
+	let matchedItem;
+	if (existingProduct && existingProduct.length > 0 && tempAddOns)
+		existingProduct.map((item) => {
+			// console.log("item", item);
+			let matchAddons = true;
+			if (item && item.addOns) {
+				const obj1 = Object.values(item.addOns);
+				const obj2 = Object.values(tempAddOns);
+				if (obj1.length === obj2.length) {
+					obj1.map((i) => {
+						obj2.map((j) => {
+							if (i.addOnId === j.addOnId) {
+								if (matchAddons && i.value.item) {
+									if (i.value.item !== j.value.item) {
+										matchAddons = false;
+										return matchAddons;
+									}
+									matchAddons = matchAddons && true;
+								} else if (matchAddons && i.value.length > 0) {
+									if (i.value.length === j.value.length) {
+										// console.log("i", i.value);
+										// console.log("j", j.value);
+										i.value.map((k) => {
+											let matched = false;
+											if (matchAddons) {
+												j.value.map((l) => {
+													if (k._id === l._id) {
+														matchAddons = true;
+														matched = true;
+														// console.log("trueeeee");
+														// console.log("matchAddons", matchAddons);
+														return matchAddons;
+													}
+													// console.log("falseeeee");
+													// console.log("matched", matched);
+													if (!matched) matchAddons = false;
+													return matchAddons;
+												});
+												// console.log("returnnn");
+												matchAddons = matchAddons && true;
+											}
+											return matchAddons;
+										});
+									} else {
+										matchAddons = false;
+									}
+								}
+							}
+							return matchAddons;
+						});
+						return matchAddons;
+					});
+					console.log("matchAddons", matchAddons);
+					if (matchAddons) {
+						matchedItem = item;
+						console.log("matchedItem", matchedItem);
+						return matchAddons;
+					}
+					return true;
+				}
+			}
 		});
-		res.status(200).json({ message: "ADD TO CART" });
-		return;
+
+	if (
+		existingProduct &&
+		existingProduct.length > 0 &&
+		!matchedItem &&
+		!tempAddOns
+	) {
+		matchedItem = existingProduct[0];
+	}
+
+	let existingProductIndex;
+
+	if (!matchedItem && !tempAddOns) {
+		matchedItem = existingProduct;
+	}
+
+	if (matchedItem)
+		existingProductIndex = user.cart.items.findIndex(
+			(i) => i._id.toString() === matchedItem._id.toString()
+		);
+
+	if (matchedItem && !addOns) {
+		existingProductIndex = user.cart.items.findIndex(
+			(i) => i._id.toString() === existingProduct._id.toString()
+		);
+	}
+	if (
+		user.cart.restaurantId &&
+		user.cart.restaurantId.toString() === restaurantId.toString()
+	) {
+		if (matchedItem) {
+			const tempProduct = matchedItem;
+			tempProduct.quantity += quantity;
+			user.cart.items[existingProductIndex] = tempProduct;
+			const tempUser = await user.save();
+			io.getIO().emit("add", {
+				action: "add",
+				user: tempUser.cart,
+				userId,
+			});
+			res.status(200).json({ message: "ADD TO CART" });
+			return;
+		} else {
+			// console.log("!!!!matchedddd");
+			const tempCartData = {
+				quantity,
+				productId,
+				name,
+				price: totalPrice,
+				addOns: tempAddOns,
+				addOnList,
+			};
+			user.cart.items.push(tempCartData);
+			const tempUser = await user.save();
+			io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
+			res.status(200).json({ message: "ADD TO CART" });
+			return;
+		}
 	}
 	user.cart.RestaurantName = RestaurantName;
 	user.cart.restaurantId = restaurantId;
+
+	totalPrice = parseFloat(totalPrice.toFixed(2));
 
 	const cartData = {
 		quantity,
 		productId,
 		name,
-		price,
-		totalPrice,
+		price: totalPrice,
+		addOns: tempAddOns,
+		addOnList,
 	};
-
 	user.cart.items.push(cartData);
 	const tempUser = await user.save();
 	io.getIO().emit("add", { action: "add", user: tempUser.cart, userId });
@@ -271,6 +420,7 @@ exports.fetchCart = async (req, res, next) => {
 exports.oldBasket = async (req, res, next) => {
 	// FILTER DATA PLEASE ------------------------------------------
 	const { userId, tempCart } = req.body;
+	tempCart.items.map((i) => delete i._id);
 	const user = await User.findById({ _id: userId });
 	user.cart = tempCart;
 	const tempUser = await user.save();
@@ -298,7 +448,7 @@ exports.removeProduct = async (req, res, next) => {
 	const user = await User.findById({ _id: userId });
 
 	const tempItems = user.cart.items.filter(
-		(i) => i.productId.toString() !== productId
+		(i) => i._id.toString() !== productId
 	);
 	if (tempItems.length < 1) user.cart = { items: [] };
 	user.cart.items = tempItems;
@@ -319,10 +469,10 @@ exports.addQuantity = async (req, res, next) => {
 	const user = await User.findById({ _id: userId });
 
 	const existedItem = user.cart.items.find(
-		(i) => i.productId.toString() === productId
+		(i) => i._id.toString() === productId
 	);
 	const existedItemIndex = user.cart.items.findIndex(
-		(i) => i.productId.toString() === productId
+		(i) => i._id.toString() === productId
 	);
 	// if (tempItems.length < 1) user.cart = { items: [] };
 	if (existedItem) {

@@ -93,7 +93,8 @@ app.use((error, req, res, next) => {
 mongoose.set("useCreateIndex", true);
 mongoose
 	.connect(
-		`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PWD}@cluster0-n7ejg.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`,
+		// `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PWD}@cluster0-n7ejg.mongodb.net/${process.env.DB_NAME}`,
+		`mongodb://root:${process.env.DB_PWD}@cluster0-shard-00-00-n7ejg.mongodb.net:27017,cluster0-shard-00-01-n7ejg.mongodb.net:27017,cluster0-shard-00-02-n7ejg.mongodb.net:27017/${process.env.DB_NAME}?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true&w=majority`,
 		{ useNewUrlParser: true, useUnifiedTopology: true }
 	)
 	.then((result) => {
