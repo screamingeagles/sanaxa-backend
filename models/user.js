@@ -49,7 +49,7 @@ const userSchema = new Schema({
 			{
 				productId: {
 					type: Schema.Types.ObjectId,
-					ref: "Product",
+					ref: "FoodItem",
 					required: true,
 				},
 				name: {
@@ -59,6 +59,8 @@ const userSchema = new Schema({
 					type: String,
 				},
 				quantity: { type: Number, required: true },
+				addOns: [],
+				addOnList: [],
 			},
 		],
 	},

@@ -11,6 +11,11 @@ const foodItemSchema = new Schema({
 	status: {
 		type: String,
 	},
+	addOnList: [{ type: Schema.Types.ObjectId, ref: "AddOn" }],
+	priceOnSelection: {
+		type: Boolean,
+		required: true,
+	},
 });
 
 module.exports = mongoose.model("FoodItem", foodItemSchema);

@@ -4,6 +4,7 @@ const FoodCategory = require("../models/foodcategory");
 const FoodItem = require("../models/fooditem");
 const Order = require("../models/order");
 const RestaurantAdmin = require("../models/restaurantAdmin");
+const AddOn = require("../models/addon");
 
 const io = require("../socket");
 
@@ -261,6 +262,21 @@ exports.dashboard = async (req, res, next) => {
 	const userId = req.userData.userId;
 	const existingRestaurants = await Restaurant.find({ restaurant: userId });
 
+	const products = await FoodCategory.find({
+		restaurant: existingRestaurants,
+	}).populate("foodItems");
+	// console.log(
+	// 	products.map((i) => {
+	// 		i.foodItems.populate("addOnList");
+	// 	})
+	// );
+	let addons;
+	try {
+		addons = await AddOn.find({
+			restaurantId: userId,
+		});
+	} catch (error) {}
+
 	const Orders = await Order.find({
 		restaurantId: existingRestaurants[0]._id,
 	});
@@ -284,8 +300,10 @@ exports.dashboard = async (req, res, next) => {
 	);
 
 	res.status(200).json({
-		customers,
+		// customers,
 		// Orders,
+		// products,
+		addons,
 		totalSales,
 		totalOrders: Orders.length,
 		totalCustomers: totalCustomers.length,
@@ -308,12 +326,21 @@ exports.addCategory = async (req, res, next) => {
 };
 
 exports.addItem = async (req, res, next) => {
-	const { foodCategory, name, description, price } = req.body;
+	const {
+		foodCategory,
+		name,
+		description,
+		price,
+		priceOnSelection,
+		addOnList,
+	} = req.body;
 	const userId = req.userData.userId;
 	const foodItems = new FoodItem({
 		foodCategory,
 		foodList: { name, price, description },
 		status: "Active",
+		addOnList,
+		priceOnSelection,
 	});
 	let cat;
 	try {
@@ -331,6 +358,34 @@ exports.addItem = async (req, res, next) => {
 		throw error;
 	}
 	res.status(200).json({ message: "OK", userId, cat });
+};
+
+exports.addAddOn = async (req, res, next) => {
+	const {
+		addOnName,
+		requiredStatus,
+		multiSelection,
+		howMany,
+		howManyMaximum,
+		selectAll,
+		items,
+	} = req.body;
+	const userId = req.userData.userId;
+	const addOnItems = new AddOn({
+		restaurantId: userId,
+		addOnName,
+		requiredStatus,
+		multiSelection,
+		howMany,
+		howManyMaximum,
+		selectAll,
+		items,
+	});
+	let addOns;
+	try {
+		addOns = await addOnItems.save();
+	} catch (err) {}
+	res.status(200).json({ message: "OK", addOns });
 };
 
 exports.orderManagement = async (req, res, next) => {
